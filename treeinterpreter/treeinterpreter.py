@@ -44,17 +44,16 @@ def _predict_tree(model, X):
     """
     leaves = model.apply(X)
 
-    global _tree_cache
-    # If we haven't cached this tree, then add it here
-    if model.tree_ not in _tree_cache:
+    # The paths for a tree don't change, so we can cache them in the tree for
+    # next time
+    if model.tree_.paths_ is None
         paths = _get_tree_paths(model.tree_, 0)
-        _tree_cache[model.tree_] = paths
-    else:
-        # Grab the paths for this tree out of our cache if it's present
-        paths = _tree_cache[model.tree_]
+        for path in paths:
+            path.reverse()
+        model.tree_.paths_ = paths
 
-    for path in paths:
-        path.reverse()
+    paths = model.tree_.paths_
+
 
     # remove the single-dimensional inner arrays
     values = model.tree_.value.squeeze()
