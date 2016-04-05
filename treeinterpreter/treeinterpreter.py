@@ -46,7 +46,7 @@ def _predict_tree(model, X):
 
     # The paths for a tree don't change, so we can cache them in the tree for
     # next time
-    if model.tree_.paths_ is None
+    if model.tree_.paths_ is None:
         paths = _get_tree_paths(model.tree_, 0)
         for path in paths:
             path.reverse()
