@@ -69,9 +69,6 @@ def _predict_tree(model, X):
         normalizer[normalizer == 0.0] = 1.0
         values /= normalizer
 
-        # Take logs, as probabilities are not additive
-        values = np.log(values)
-
         biases = np.zeros((X.shape[0], model.n_classes_))
         contributions = np.zeros((X.shape[0],
                                   X.shape[1], model.n_classes_))
