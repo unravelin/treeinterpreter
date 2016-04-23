@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import random
 from distutils.version import LooseVersion
 
 import numpy as np
@@ -89,16 +90,18 @@ def _predict_tree(model, X):
     return direct_prediction, biases, contributions
 
 
-def _predict_forest(model, X):
+def _predict_forest(model, X, sample_pct):
     """
     For a given RandomForestRegressor or RandomForestClassifier,
     returns a triple of [prediction, bias and feature_contributions], such
-    that prediction ≈ bias + feature_contributions.
+    that prediction ≈ bias + feature_contributions. An optional percentage of the trees can be sampled for performance purposes.
     """
     biases = []
     contributions = []
     predictions = []
-    for tree in model.estimators_:
+    sampled_trees = random.sample(model.estimators_, int(len(model.estimators_) * sample_pct))
+
+    for tree in sampled_trees:
         pred, bias, contribution = _predict_tree(tree, X)
         biases.append(bias)
         contributions.append(contribution)
@@ -107,7 +110,7 @@ def _predict_forest(model, X):
             np.mean(contributions, axis=0))
 
 
-def predict(model, X):
+def predict(model, X, sample_pct=1.0):
     """ Returns a triple (prediction, bias, feature_contributions), such
     that prediction ≈ bias + feature_contributions.
     Parameters
@@ -118,6 +121,8 @@ def predict(model, X):
 
     X : array-like, shape = (n_samples, n_features)
     Test samples.
+
+    sample_pct: float, indicating the percentage of trees to sample from the forest.
 
     Returns
     -------
@@ -132,13 +137,15 @@ def predict(model, X):
     # Only single out response variable supported,
     if model.n_outputs_ > 1:
         raise ValueError("Multilabel classification trees not supported")
+    if sample_pct == 0.0:
+        raise ValueError("Sample percentage may not be 0")
 
     if (type(model) == DecisionTreeRegressor or
         type(model) == DecisionTreeClassifier):
         return _predict_tree(model, X)
     elif (type(model) == RandomForestRegressor or
           type(model) == RandomForestClassifier):
-        return _predict_forest(model, X)
+        return _predict_forest(model, X, sample_pct)
     else:
         raise ValueError("Wrong model type. Base learner needs to be \
             DecisionTreeClassifier or DecisionTreeRegressor.")
